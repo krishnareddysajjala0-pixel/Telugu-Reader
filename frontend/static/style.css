@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --primary-light: #eef2ff;
+    --telugu-font: 'Noto Sans Telugu', system-ui, -apple-system, sans-serif;
+    --body-font: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    font-family: var(--telugu-font), var(--body-font);
+    background-color: #f8fafc;
+    color: #0f172a;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Pulsing recording animation */
+@keyframes pulse-ring {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+    70% {
+        transform: scale(1.15);
+        box-shadow: 0 0 0 14px rgba(239, 68, 68, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+
+.mic-recording {
+    animation: pulse-ring 1.6s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    background-color: #ef4444 !important;
+    color: white !important;
+}
+
+/* Sound wave animation */
+.sound-wave {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: 18px;
+}
+
+.sound-wave span {
+    width: 3px;
+    height: 100%;
+    background-color: currentColor;
+    border-radius: 3px;
+    animation: wave-bar 1s ease-in-out infinite alternate;
+}
+
+.sound-wave span:nth-child(2) {
+    animation-delay: 0.2s;
+    height: 60%;
+}
+.sound-wave span:nth-child(3) {
+    animation-delay: 0.4s;
+    height: 80%;
+}
+.sound-wave span:nth-child(4) {
+    animation-delay: 0.1s;
+    height: 40%;
+}
+
+@keyframes wave-bar {
+    0% { transform: scaleY(0.3); }
+    100% { transform: scaleY(1.0); }
+}
+
+/* Markdown styling inside messages */
+.prose-telugu h1, .prose-telugu h2, .prose-telugu h3 {
+    font-weight: 700;
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+    color: #1e293b;
+}
+.prose-telugu p {
+    margin-bottom: 0.6rem;
+    line-height: 1.65;
+}
+.prose-telugu ul {
+    list-style-type: disc;
+    margin-left: 1.25rem;
+    margin-bottom: 0.6rem;
+}
+.prose-telugu li {
+    margin-bottom: 0.25rem;
+}
+.prose-telugu strong {
+    font-weight: 600;
+    color: #0f172a;
+}

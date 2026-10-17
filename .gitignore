@@ -1,0 +1,27 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Environment Variables & Secrets
+.env
+*.env
+
+# Local Database & User Uploads
+data/*.db
+data/telugu_rag.db
+data/uploads/*.pdf
+data/audio/*.mp3
+*.mp3
+
+# Editor / System files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
