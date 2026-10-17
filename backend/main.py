@@ -1,8 +1,8 @@
 import os
 import shutil
 from typing import Optional, List
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks, Request
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -36,6 +36,43 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(AUDIO_DIR, exist_ok=True)
 os.makedirs(STATIC_DIR, exist_ok=True)
 
+# Helper functions to find frontend assets in serverless runtimes
+def get_frontend_file_path(filename: str) -> Optional[str]:
+    candidates = [
+        os.path.join(FRONTEND_DIR, filename),
+        os.path.join(os.getcwd(), "frontend", filename),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend", filename),
+        os.path.join("/var/task/frontend", filename)
+    ]
+    for p in candidates:
+        if os.path.exists(p) and os.path.isfile(p):
+            return p
+    return None
+
+def get_static_file_path(filename: str) -> Optional[str]:
+    candidates = [
+        os.path.join(STATIC_DIR, filename),
+        os.path.join(os.getcwd(), "frontend", "static", filename),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend", "static", filename),
+        os.path.join("/var/task/frontend/static", filename)
+    ]
+    for p in candidates:
+        if os.path.exists(p) and os.path.isfile(p):
+            return p
+    return None
+
+# Middleware to seamlessly normalize any Vercel proxy / rewrite prefixes
+@app.middleware("http")
+async def normalize_vercel_paths(request: Request, call_next):
+    path = request.scope.get("path", "")
+    if path in ("/api/index.py", "/api/index", "/api/index.py/", "/api/index/"):
+        request.scope["path"] = "/"
+    elif path.startswith("/api/index.py/"):
+        request.scope["path"] = path[len("/api/index.py"):]
+    elif path.startswith("/api/index/"):
+        request.scope["path"] = path[len("/api/index"):]
+    return await call_next(request)
+
 # Initialize database schema
 database.init_db()
 
@@ -64,11 +101,25 @@ class SettingsRequest(BaseModel):
 
 # Endpoints
 @app.get("/")
+@app.get("/api")
+@app.get("/api/")
+@app.get("/api/index")
+@app.get("/api/index.py")
+@app.get("/index.html")
 def get_index():
-    index_path = os.path.join(FRONTEND_DIR, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
+    index_path = get_frontend_file_path("index.html")
+    if index_path and os.path.exists(index_path):
+        with open(index_path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read(), status_code=200)
     return {"message": "Telugu PDF Assistant Backend is running."}
+
+@app.get("/static/{file_path:path}")
+def serve_static(file_path: str):
+    static_file = get_static_file_path(file_path)
+    if static_file and os.path.exists(static_file):
+        media_type = "text/javascript" if file_path.endswith(".js") else ("text/css" if file_path.endswith(".css") else None)
+        return FileResponse(static_file, media_type=media_type)
+    raise HTTPException(status_code=404, detail="File not found")
 
 @app.get("/api/settings")
 def get_settings():
