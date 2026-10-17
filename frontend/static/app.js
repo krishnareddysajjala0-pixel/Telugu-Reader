@@ -115,7 +115,7 @@ async function handleFileUpload(files) {
     const forceOcr = document.getElementById("force-ocr-checkbox").checked;
 
     progressDiv.classList.remove("hidden");
-    statusText.textContent = `${files.length} PDF(s) ప్రాసెస్ అవుతున్నాయి...`;
+    statusText.textContent = `${files.length} ఫైల్(లు) ప్రాసెస్ అవుతున్నాయి...`;
 
     const formData = new FormData();
     for (let i = 0; i < files.length; i++) {
@@ -223,11 +223,15 @@ function renderDocumentsList() {
             }
         }
         
+        const isTxt = doc.filename.toLowerCase().endsWith(".txt");
+        const iconBg = isTxt ? "bg-blue-50 text-blue-600" : "bg-red-50 text-red-600";
+        const iconName = isTxt ? "file-text" : "file-text";
+
         card.innerHTML = `
             <div class="flex items-start justify-between gap-2">
                 <div class="flex items-center gap-2 overflow-hidden">
-                    <div class="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0">
-                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                    <div class="w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="${iconName}" class="w-4 h-4"></i>
                     </div>
                     <div class="truncate">
                         <h4 class="text-xs font-bold text-slate-800 truncate" title="${doc.filename}">${doc.filename}</h4>
@@ -235,6 +239,7 @@ function renderDocumentsList() {
                             <span>${doc.page_count} పేజీలు</span>
                             <span>•</span>
                             <span>${fileSizeMB} MB</span>
+                            ${isTxt ? '<span class="text-blue-600 font-bold">• TXT</span>' : ''}
                         </div>
                     </div>
                 </div>

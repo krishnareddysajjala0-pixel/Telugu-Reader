@@ -4,7 +4,10 @@ import json
 from datetime import datetime
 from typing import List, Dict, Optional, Any
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "telugu_rag.db")
+if os.environ.get("VERCEL"):
+    DB_PATH = "/tmp/telugu_rag.db"
+else:
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "telugu_rag.db")
 
 def get_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)

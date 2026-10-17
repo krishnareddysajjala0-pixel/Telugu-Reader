@@ -16,8 +16,10 @@ ENV/
 # Local Database & User Uploads
 data/*.db
 data/telugu_rag.db
-data/uploads/*.pdf
-data/audio/*.mp3
+data/uploads/*
+!data/uploads/.gitkeep
+data/audio/*
+!data/audio/.gitkeep
 *.mp3
 
 # Editor / System files

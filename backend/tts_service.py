@@ -4,7 +4,10 @@ import re
 from gtts import gTTS
 from typing import Optional
 
-AUDIO_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "audio")
+if os.environ.get("VERCEL"):
+    AUDIO_DIR = "/tmp/audio"
+else:
+    AUDIO_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "audio")
 
 def clean_text_for_speech(text: str) -> str:
     """Removes markdown symbols, URLs, asterisks, brackets, and rogue font artifacts for natural TTS reading."""

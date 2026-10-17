@@ -43,6 +43,95 @@ def ocr_single_page(filepath: str, page_number: int) -> str:
         print(f"Error in ocr_single_page: {e}")
     return ""
 
+def process_txt(filepath: str, filename: str) -> Dict[str, Any]:
+    """
+    Reads a Telugu text file (.txt), segments it into logical pages (~1500 chars),
+    generates summary and topics via Gemini, and stores it in SQLite.
+    """
+    content = ""
+    for enc in ["utf-8", "utf-8-sig", "utf-16", "cp1252", "latin-1"]:
+        try:
+            with open(filepath, "r", encoding=enc) as f:
+                content = f.read()
+            break
+        except Exception:
+            continue
+            
+    content = content.strip()
+    if not content:
+        raise ValueError(f"{filename} లో టెక్స్ట్ కనుగొనబడలేదు (Empty text file)")
+        
+    file_size = os.path.getsize(filepath)
+    
+    # Split into logical pages of ~1500 characters respecting paragraphs
+    paragraphs = content.split("\n\n")
+    pages_data = []
+    current_page = []
+    current_len = 0
+    page_num = 1
+    
+    for para in paragraphs:
+        p_clean = para.strip()
+        if not p_clean:
+            continue
+        if current_len + len(p_clean) > 1500 and current_page:
+            pages_data.append({
+                "page_number": page_num,
+                "page_text": "\n\n".join(current_page),
+                "is_ocr": 1
+            })
+            page_num += 1
+            current_page = [p_clean]
+            current_len = len(p_clean)
+        else:
+            current_page.append(p_clean)
+            current_len += len(p_clean)
+            
+    if current_page:
+        pages_data.append({
+            "page_number": page_num,
+            "page_text": "\n\n".join(current_page),
+            "is_ocr": 1
+        })
+        
+    page_count = len(pages_data)
+    full_text = "\n\n".join([f"--- పేజీ {p['page_number']} ---\n{p['page_text']}" for p in pages_data])
+    
+    # Generate summary & topics
+    summary, topics = llm_service.summarize_document(filename, full_text)
+    
+    # Save to SQLite database
+    doc_id = database.save_document(
+        filename=filename,
+        filepath=filepath,
+        file_size=file_size,
+        page_count=page_count,
+        full_text=full_text,
+        pages=pages_data,
+        summary=summary,
+        key_topics=topics
+    )
+    
+    # Pre-generate TTS audio for summary
+    summary_audio_url = None
+    if summary:
+        try:
+            summary_audio_url = tts_service.generate_telugu_audio(summary, lang="te")
+        except Exception as e:
+            print(f"Error pre-generating summary audio for txt: {e}")
+            
+    return {
+        "id": doc_id,
+        "filename": filename,
+        "file_size": file_size,
+        "page_count": page_count,
+        "summary": summary,
+        "key_topics": topics,
+        "summary_audio_url": summary_audio_url,
+        "pages": pages_data,
+        "is_legacy_font": False
+    }
+
 def process_pdf(filepath: str, filename: str, force_ocr: bool = False) -> Dict[str, Any]:
     """
     Extracts text from PDF, executes OCR on scanned/unreadable or legacy font pages,

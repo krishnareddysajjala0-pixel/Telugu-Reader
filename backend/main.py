@@ -20,11 +20,17 @@ app.add_middleware(
 )
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
-AUDIO_DIR = os.path.join(DATA_DIR, "audio")
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 STATIC_DIR = os.path.join(FRONTEND_DIR, "static")
+
+if os.environ.get("VERCEL"):
+    DATA_DIR = "/tmp"
+    UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
+    AUDIO_DIR = os.path.join(DATA_DIR, "audio")
+else:
+    DATA_DIR = os.path.join(BASE_DIR, "data")
+    UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
+    AUDIO_DIR = os.path.join(DATA_DIR, "audio")
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(AUDIO_DIR, exist_ok=True)
@@ -130,8 +136,9 @@ async def upload_documents(
     errors = []
     
     for file in files:
-        if not file.filename.lower().endswith(".pdf"):
-            errors.append(f"{file.filename}: కేవలం PDF ఫైల్స్ మాత్రమే అంగీకరించబడతాయి.")
+        fname_lower = file.filename.lower()
+        if not (fname_lower.endswith(".pdf") or fname_lower.endswith(".txt")):
+            errors.append(f"{file.filename}: కేవలం PDF మరియు Text (.txt) ఫైల్స్ మాత్రమే అంగీకరించబడతాయి.")
             continue
             
         safe_filename = file.filename.replace(" ", "_")
@@ -142,7 +149,10 @@ async def upload_documents(
             shutil.copyfileobj(file.file, buffer)
             
         try:
-            doc_data = pdf_processor.process_pdf(dest_path, file.filename, force_ocr=force_ocr)
+            if fname_lower.endswith(".txt"):
+                doc_data = pdf_processor.process_txt(dest_path, file.filename)
+            else:
+                doc_data = pdf_processor.process_pdf(dest_path, file.filename, force_ocr=force_ocr)
             processed.append(doc_data)
         except Exception as e:
             errors.append(f"{file.filename}: ప్రాసెస్ చేయడంలో లోపం - {str(e)}")

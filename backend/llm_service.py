@@ -5,8 +5,14 @@ from google import genai
 from google.genai import types
 from backend import database
 
-DEFAULT_MODELS = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-flash-latest"]
-DEFAULT_MODEL = "gemini-3.8-flash"
+DEFAULT_MODELS = [
+    "gemini-3.7-flash",
+    "gemini-3.5-flash",
+    "gemini-3.8-flash",
+    "gemini-3.1-flash-lite",
+    "gemini-flash-latest"
+]
+DEFAULT_MODEL = "gemini-3.7-flash"
 
 def get_api_key() -> Optional[str]:
     # Check SQLite settings first, then env variable
